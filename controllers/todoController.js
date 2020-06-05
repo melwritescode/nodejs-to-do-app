@@ -16,18 +16,6 @@ const todoSchema = new mongoose.Schema({
 
 const Todo = mongoose.model('Todo', todoSchema);
 
-const itemOne = Todo({item: 'make dinner reservations'}).save(err => {
-  if(err) throw err;
-  console.log('item saved');
-});
-
-// Dummy Data
-let todos = [
-  { item: 'laundry' },
-  { item: 'walk dog' },
-  { item: 'buy groceries' }
-];
-
 // Router
 const router = (app) => {
   app.get('/todo', getTodos);
@@ -37,22 +25,27 @@ const router = (app) => {
 
 // HTTP Event Handlers
 const getTodos = (req, res) => {
-  res.render('todo', { todos });
+  Todo.find({}, (err, todos) => {
+    if(err) throw err;
+    res.render('todo', { todos });
+  });
 };
 
 const postTodo = (req, res) => {
-  todos.push(req.body);
-  res.json(todos);
+  const newItem = req.body;
+  Todo(newItem).save((err, todo) => {
+    res.json(todo);
+  })
 };
 
 const deleteTodo = (req, res) => {
-  const itemToDelete = req.params.item;
-
-  todos = todos.filter(idx => {
-    const item = idx.item.replace(/ /g, '-')
-    return item !== itemToDelete;
+  const itemToDelete = req.params.item.replace(/\-/g, " ");
+  Todo
+  .find({item: itemToDelete})
+  .deleteOne((err, item) => {
+    if(err) throw err;
+    res.json(item);
   })
-  res.json(todos);
 };
 
 module.exports = router;
